@@ -1,1 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Ledger | jnuru.studio</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-soft: #1f2430;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --line: #2f3441;
+      --accent: #f5c84c;
+      --accent-dark: #b88311;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --radius: 18px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(245, 200, 76, 0.12), transparent 34rem),
+        linear-gradient(135deg, #0f1115 0%, #151821 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+    }
+
+    .app {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.4rem);
+      line-height: 0.95;
+      letter-spacing: -0.07em;
+    }
+
+    .subhead {
+      max-width: 650px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(245, 200, 76, 0.55);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #17120a;
+      border-color: var(--accent);
+      font-weight: 800;
+    }
+
+    .btn-danger {
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, 0.45);
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(23, 26, 33, 0.78);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+
+    .stat-card strong {
+      font-size: 1.75rem;
+      letter-spacing: -0.04em;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search {
+      width: min(520px, 100%);
+      padding: 13px 16px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(260px, 1fr));
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+    }
+
+    .column {
+      min-height: 520px;
+      background: rgba(23, 26, 33, 0.76);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .column-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .column-header h2 {
+      margin: 0;
+      font-size: 0.92rem;
+      letter-spacing: -0.01em;
+    }
+
+    .count {
+      display: inline-flex;
+      min-width: 26px;
+      height: 26px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .cards {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .client-card {
+      padding: 14px;
+      background: #10131a;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .client-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .client-card h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: -0.025em;
+    }
+
+    .client-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      white-space: nowrap;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #17120a;
+      background: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 900;
+    }
+
+    .meta {
+      display: grid;
+      gap: 6px;
+      margin: 12px 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .mini-btn {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 0.78rem;
+    }
+
+    .mini-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .empty {
+      padding: 24px 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+    }
+
+    dialog {
+      width: min(620px, calc(100% - 32px));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 0;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    form {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      color: var(--text);
+      background: #10131a;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 92px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 900px) {
+      .topbar,
+      .toolbar {
+        display: grid;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .stats,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="topbar">
+      <div>
+        <p class="eyebrow">jnuru.studio</p>
+        <h1>Client Ledger</h1>
+        <p class="subhead">A local-first client pipeline tracker for freelance leads, proposals, active projects, and follow-up. No backend. No auth. No cloud sync yet.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="addClientBtn">+ Add Client</button>
+        <button class="btn btn-danger" id="clearAllBtn">Clear All</button>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Pipeline summary">
+      <div class="stat-card"><span>Total Clients</span><strong id="totalClients">0</strong></div>
+      <div class="stat-card"><span>Pipeline Value</span><strong id="pipelineValue">$0</strong></div>
+      <div class="stat-card"><span>Active Projects</span><strong id="activeProjects">0</strong></div>
+      <div class="stat-card"><span>Won Value</span><strong id="wonValue">$0</strong></div>
+    </section>
+
+    <section class="toolbar">
+      <input class="search" id="searchInput" type="search" placeholder="Search clients, projects, notes..." />
+      <button class="btn" id="seedBtn">Load Sample Data</button>
+    </section>
+
+    <section class="board" id="board" aria-label="Client pipeline board"></section>
+  </main>
+
+  <dialog id="clientDialog">
+    <div class="modal-head">
+      <h2 id="dialogTitle">Add Client</h2>
+      <button class="mini-btn" id="closeDialogBtn" type="button">Close</button>
+    </div>
+
+    <form id="clientForm">
+      <input type="hidden" id="clientId" />
+
+      <div class="form-grid">
+        <label>
+          Client Name
+          <input id="clientName" required placeholder="Acme Church" />
+        </label>
+        <label>
+          Contact
+          <input id="clientContact" placeholder="name@email.com" />
+        </label>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Project Type
+          <input id="clientProject" placeholder="Website, brand, landing page..." />
+        </label>
+        <label>
+          Value
+          <input id="clientValue" type="number" min="0" step="50" placeholder="2500" />
+        </label>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Stage
+          <select id="clientStage"></select>
+        </label>
+        <label>
+          Next Follow-Up
+          <input id="clientFollowUp" type="date" />
+        </label>
+      </div>
+
+      <label>
+        Notes
+        <textarea id="clientNotes" placeholder="What matters, next move, scope, risk, etc."></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button class="btn" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save Client</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = "clients";
+
+    const stages = [
+      { id: "lead", label: "Lead" },
+      { id: "discovery", label: "Discovery" },
+      { id: "proposal", label: "Proposal" },
+      { id: "active", label: "Active" },
+      { id: "followup", label: "Follow-Up" },
+      { id: "won", label: "Won" },
+      { id: "lost", label: "Lost" }
+    ];
+
+    let clients = [];
+    let searchTerm = "";
+
+    const board = document.getElementById("board");
+    const dialog = document.getElementById("clientDialog");
+    const form = document.getElementById("clientForm");
+    const dialogTitle = document.getElementById("dialogTitle");
+    const stageSelect = document.getElementById("clientStage");
+
+    const fields = {
+      id: document.getElementById("clientId"),
+      name: document.getElementById("clientName"),
+      contact: document.getElementById("clientContact"),
+      project: document.getElementById("clientProject"),
+      value: document.getElementById("clientValue"),
+      stage: document.getElementById("clientStage"),
+      followUp: document.getElementById("clientFollowUp"),
+      notes: document.getElementById("clientNotes")
+    };
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(Number(value) || 0);
+    }
+
+    function escapeHTML(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Data is stored locally in this browser/device only.
+    // This v1 does not sync across devices and has no backend.
+    function saveClients() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+    }
+
+    function loadClients() {
+      const savedClients = localStorage.getItem(STORAGE_KEY);
+
+      if (savedClients) {
+        clients = JSON.parse(savedClients);
+      }
+    }
+
+    function getFilteredClients() {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return clients;
+
+      return clients.filter((client) => {
+        return [client.name, client.contact, client.project, client.notes, client.stage]
+          .join(" ")
+          .toLowerCase()
+          .includes(term);
+      });
+    }
+
+    function renderStats() {
+      const pipelineClients = clients.filter((client) => !["won", "lost"].includes(client.stage));
+      const active = clients.filter((client) => client.stage === "active");
+      const won = clients.filter((client) => client.stage === "won");
+
+      document.getElementById("totalClients").textContent = clients.length;
+      document.getElementById("pipelineValue").textContent = formatMoney(
+        pipelineClients.reduce((sum, client) => sum + Number(client.value || 0), 0)
+      );
+      document.getElementById("activeProjects").textContent = active.length;
+      document.getElementById("wonValue").textContent = formatMoney(
+        won.reduce((sum, client) => sum + Number(client.value || 0), 0)
+      );
+    }
+
+    function render() {
+      const visibleClients = getFilteredClients();
+
+      board.innerHTML = stages.map((stage) => {
+        const stageClients = visibleClients.filter((client) => client.stage === stage.id);
+
+        return `
+          <article class="column">
+            <div class="column-header">
+              <h2>${stage.label}</h2>
+              <span class="count">${stageClients.length}</span>
+            </div>
+            <div class="cards">
+              ${stageClients.length ? stageClients.map(renderClientCard).join("") : `<div class="empty">No clients here yet.</div>`}
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      renderStats();
+    }
+
+    function renderClientCard(client) {
+      const stageIndex = stages.findIndex((stage) => stage.id === client.stage);
+      const previousStage = stages[stageIndex - 1];
+      const nextStage = stages[stageIndex + 1];
+
+      return `
+        <article class="client-card">
+          <header>
+            <div>
+              <h3>${escapeHTML(client.name)}</h3>
+              <p>${escapeHTML(client.project || "No project type set")}</p>
+            </div>
+            <span class="pill">${formatMoney(client.value)}</span>
+          </header>
+
+          <div class="meta">
+            ${client.contact ? `<span>Contact: ${escapeHTML(client.contact)}</span>` : ""}
+            ${client.followUp ? `<span>Follow-up: ${escapeHTML(client.followUp)}</span>` : ""}
+            ${client.notes ? `<span>Notes: ${escapeHTML(client.notes)}</span>` : ""}
+          </div>
+
+          <div class="card-actions">
+            ${previousStage ? `<button class="mini-btn" onclick="moveClient('${client.id}', '${previousStage.id}')">← ${previousStage.label}</button>` : ""}
+            ${nextStage ? `<button class="mini-btn" onclick="moveClient('${client.id}', '${nextStage.id}')">${nextStage.label} →</button>` : ""}
+            <button class="mini-btn" onclick="editClient('${client.id}')">Edit</button>
+            <button class="mini-btn" onclick="deleteClient('${client.id}')">Delete</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function openAddDialog() {
+      form.reset();
+      fields.id.value = "";
+      fields.stage.value = "lead";
+      dialogTitle.textContent = "Add Client";
+      dialog.showModal();
+    }
+
+    function closeDialog() {
+      dialog.close();
+    }
+
+    function editClient(id) {
+      const client = clients.find((item) => item.id === id);
+      if (!client) return;
+
+      fields.id.value = client.id;
+      fields.name.value = client.name || "";
+      fields.contact.value = client.contact || "";
+      fields.project.value = client.project || "";
+      fields.value.value = client.value || "";
+      fields.stage.value = client.stage || "lead";
+      fields.followUp.value = client.followUp || "";
+      fields.notes.value = client.notes || "";
+
+      dialogTitle.textContent = "Edit Client";
+      dialog.showModal();
+    }
+
+    function deleteClient(id) {
+      const client = clients.find((item) => item.id === id);
+      if (!client) return;
+
+      const confirmed = confirm(`Delete ${client.name}? This cannot be undone.`);
+      if (!confirmed) return;
+
+      clients = clients.filter((item) => item.id !== id);
+      saveClients();
+      render();
+    }
+
+    function moveClient(id, stage) {
+      clients = clients.map((client) => {
+        if (client.id !== id) return client;
+        return { ...client, stage, updatedAt: new Date().toISOString() };
+      });
+
+      saveClients();
+      render();
+    }
+
+    function handleSubmit(event) {
+      event.preventDefault();
+
+      const id = fields.id.value || crypto.randomUUID();
+      const client = {
+        id,
+        name: fields.name.value.trim(),
+        contact: fields.contact.value.trim(),
+        project: fields.project.value.trim(),
+        value: Number(fields.value.value || 0),
+        stage: fields.stage.value,
+        followUp: fields.followUp.value,
+        notes: fields.notes.value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!client.name) return;
+
+      const exists = clients.some((item) => item.id === id);
+      clients = exists
+        ? clients.map((item) => item.id === id ? client : item)
+        : [{ ...client, createdAt: new Date().toISOString() }, ...clients];
+
+      saveClients();
+      closeDialog();
+      render();
+    }
+
+    function seedSampleData() {
+      if (clients.length && !confirm("This will add sample clients to your current ledger. Continue?")) return;
+
+      clients = [
+        ...clients,
+        {
+          id: crypto.randomUUID(),
+          name: "Grace Community Church",
+          contact: "pastor@example.com",
+          project: "Website redesign",
+          value: 3500,
+          stage: "proposal",
+          followUp: "",
+          notes: "Send tighter scope and homepage direction.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Local Fitness Coach",
+          contact: "coach@example.com",
+          project: "Landing page + lead form",
+          value: 1500,
+          stage: "discovery",
+          followUp: "",
+          notes: "Needs fast launch. Watch scope creep.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Boutique Studio",
+          contact: "owner@example.com",
+          project: "Brand refresh",
+          value: 2200,
+          stage: "active",
+          followUp: "",
+          notes: "Waiting on assets.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+
+      saveClients();
+      render();
+    }
+
+    function clearAllClients() {
+      if (!clients.length) return;
+      const confirmed = confirm("Clear every client from this browser? This cannot be undone.");
+      if (!confirmed) return;
+
+      clients = [];
+      saveClients();
+      render();
+    }
+
+    function initStageOptions() {
+      stageSelect.innerHTML = stages.map((stage) => `<option value="${stage.id}">${stage.label}</option>`).join("");
+    }
+
+    document.getElementById("addClientBtn").addEventListener("click", openAddDialog);
+    document.getElementById("closeDialogBtn").addEventListener("click", closeDialog);
+    document.getElementById("cancelBtn").addEventListener("click", closeDialog);
+    document.getElementById("seedBtn").addEventListener("click", seedSampleData);
+    document.getElementById("clearAllBtn").addEventListener("click", clearAllClients);
+    document.getElementById("searchInput").addEventListener("input", (event) => {
+      searchTerm = event.target.value;
+      render();
+    });
+    form.addEventListener("submit", handleSubmit);
+
+    initStageOptions();
+    loadClients();
+    render();
+  </script>
+</body>
+</html>
